@@ -68,6 +68,7 @@ class ApiResponseAspect extends AbstractAspect
         } catch (Exception $e) {
             $code = $e->getCode();
             $message = $e->getMessage();
+            $data = null;
             $catchException = false;
             foreach ($catchExceptions ?? [] as $exception => $handler) {
                 if (is_string($handler) && is_integer($exception)) {
@@ -79,6 +80,8 @@ class ApiResponseAspect extends AbstractAspect
                         $handlerResult = $handler($e);
                         $code = $handlerResult['code'] ?? $code;
                         $message = $handlerResult['message'] ?? $message;
+                        // 仅透传异常处理回调明确提供的对外数据。
+                        $data = $handlerResult['data'] ?? null;
                     }
                     break;
                 }
@@ -87,7 +90,7 @@ class ApiResponseAspect extends AbstractAspect
                 throw $e;
             }
 
-            $result = $responseResult->error($code, $message)->body();
+            $result = $responseResult->error($code, $message, $data)->body();
         }
 
         return $result;
